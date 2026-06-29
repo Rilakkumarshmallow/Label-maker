@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>31297 ラベルメーカー V5.4</title>
+<style>
+/* ===== リセット・ベース ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Hiragino Kaku Gothic ProN','Meiryo',sans-serif;background:#f5f5f5;color:#222;min-height:100vh}
+
+/* ===== ヘッダー ===== */
+.app-header{background:#1a1a2e;color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px}
+.app-header h1{font-size:18px;font-weight:600;letter-spacing:.05em}
+.app-header .ver{font-size:11px;background:#e94560;color:#fff;padding:2px 7px;border-radius:10px;font-weight:700}
+
+/* ===== レイアウト ===== */
+.layout{display:grid;grid-template-columns:300px 1fr;gap:0;min-height:calc(100vh - 48px)}
+
+/* ===== 左サイドバー ===== */
+.sidebar{background:#fff;border-right:1px solid #e0e0e0;padding:16px;overflow-y:auto}
+.sidebar h2{font-size:13px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #1a1a2e}
+
+/* ===== メインエリア ===== */
+.main{padding:16px;overflow-y:auto}
+
+/* ===== キット管理 ===== */
+select.kit-list{width:100%;height:120px;border:1px solid #ccc;border-radius:4px;font-size:13px;padding:4px}
+.btn-row{display:flex;gap:4px;margin:4px 0}
+input[type=text],input[type=number],textarea{width:100%;border:1px solid #ccc;border-radius:4px;padding:6px 8px;font-size:13px;font-family:inherit}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{outline:none;border-color:#1a1a2e}
+textarea{resize:vertical}
+label.field-label{display:block;font-size:12px;color:#555;margin:8px 0 2px}
+
+/* ===== ボタン ===== */
+.btn{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;transition:all .15s}
+.btn-sm{padding:4px 8px;font-size:12px}
+.btn-primary{background:#1a1a2e;color:#fff}
+.btn-primary:hover{background:#2d2d50}
+.btn-danger{background:#e94560;color:#fff}
+.btn-danger:hover{background:#c73652}
+.btn-ghost{background:#f0f0f0;color:#333;border:1px solid #ccc}
+.btn-ghost:hover{background:#e0e0e0}
+.btn-accent{background:#e94560;color:#fff}
+.btn-accent:hover{background:#c73652}
+.btn-success{background:#2e7d32;color:#fff}
+.btn-success:hover{background:#1b5e20}
+.btn-block{width:100%;margin:4px 0}
+
+.section-gap{height:16px}
+
+/* ===== 印刷指示エリア ===== */
+.v5row{display:grid;grid-template-columns:1fr 70px 32px;gap:4px;margin:3px 0;align-items:center}
+.v5row input[type=number]{text-align:center}
+.v5row .btn-sm{padding:4px 6px}
+
+/* ===== 開始位置 ===== */
+.pos-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* ===== サマリー ===== */
+.summary-box{background:#1a1a2e;color:#fff;border-radius:8px;padding:12px 16px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+.summary-box .summary-title{font-weight:700;font-size:14px;margin-bottom:6px;color:#e94560}
+
+/* ===== シートタブ ===== */
+.sheet-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.sheet-tab{padding:6px 14px;border:2px solid #ccc;border-radius:20px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;color:#555}
+.sheet-tab:hover{border-color:#1a1a2e;color:#1a1a2e}
+.sheet-tab.active{border-color:#e94560;background:#e94560;color:#fff}
+.sheet-tab.active::before{content:'▶ '}
+
+/* ===== プレビューグリッド ===== */
+.preview-wrap{overflow-x:auto}
+.preview-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;min-width:480px;transform-origin:top left;transition:transform .2s}
+.cell{border:1px solid #ddd;min-height:34px;font-size:10px;text-align:center;padding:3px 2px;display:flex;align-items:center;justify-content:center;line-height:1.3;border-radius:2px;word-break:break-all;background:#fff}
+.cell.filled{background:#e8f5e9;border-color:#81c784;font-weight:600;color:#1b5e20}
+.cell.empty{background:#fafafa;color:#ccc}
+.cell.start-mark{border-color:#e94560;background:#fce4ec}
+
+/* 行番号 */
+.preview-with-ruler{display:grid;grid-template-columns:24px 1fr;gap:4px}
+.row-ruler{display:flex;flex-direction:column;gap:3px}
+.row-num{height:34px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#999;font-weight:600}
+
+/* ===== エラー・情報 ===== */
+.err-box{background:#ffeaea;border:1px solid #f44336;border-radius:4px;padding:8px 12px;font-size:13px;white-space:pre-wrap;color:#b71c1c}
+.info-box{background:#e3f2fd;border:1px solid #64b5f6;border-radius:4px;padding:8px 12px;font-size:13px;white-space:pre-wrap;color:#0d47a1}
+
+/* ===== 履歴 ===== */
+.history-section{margin-top:12px}
+.history-item{border:1px solid #e0e0e0;border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fff;font-size:13px;line-height:1.6}
+.history-item .hist-time{font-size:11px;color:#999;margin-bottom:4px}
+.history-item .hist-kit{font-weight:700;color:#1a1a2e}
+.history-item .hist-extra{color:#666}
+.history-item .hist-meta{font-size:12px;color:#888;margin-top:4px}
+.history-toggle{background:none;border:none;color:#1a1a2e;cursor:pointer;font-size:13px;font-weight:700;padding:0;text-decoration:underline}
+
+/* ===== セクション見出し ===== */
+.section-header{font-size:13px;font-weight:700;color:#333;margin:14px 0 6px;display:flex;align-items:center;gap:6px}
+.section-header::before{content:'';display:block;width:3px;height:14px;background:#e94560;border-radius:2px}
+
+/* ===== ズーム ===== */
+.zoom-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
+.zoom-bar select{width:auto;border:1px solid #ccc;border-radius:4px;padding:4px 8px;font-size:13px}
+
+/* ===== 印刷ボタン ===== */
+.print-area{margin-top:12px;padding:10px;background:#fff3e0;border-radius:6px;border:1px solid #ffb74d}
+.print-area .print-note{font-size:11px;color:#e65100;margin-top:4px}
+
+/* ===== レスポンシブ ===== */
+@media(max-width:700px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{border-right:none;border-bottom:1px solid #e0e0e0}
+}
+
+/* ===== 印刷調整UI ===== */
+.print-config{background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:10px 12px;margin-top:10px;font-size:12px}
+.print-config summary{cursor:pointer;font-weight:700;color:#e65100;font-size:13px}
+.print-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.print-config-grid label{font-size:11px;color:#555;display:block;margin-bottom:1px}
+.print-config-grid input{width:100%;border:1px solid #ccc;border-radius:3px;padding:3px 6px;font-size:12px}
+.print-config-reset{margin-top:6px;font-size:11px;color:#1976d2;cursor:pointer;background:none;border:none;text-decoration:underline}
+
+/* 通常表示時は印刷レイアウトを隠す */
+#printLayout{ display:none; }
+
+/* ===== 印刷用 ===== */
+@media print{
+  /* 画面UIを全て非表示 */
+  .app-header,.sidebar,.main,.layout{display:none!important}
+
+  /* 印刷専用レイアウトのみ表示 */
+  #printLayout{
+    display:block!important;
+    margin:0;
+    padding:0;
+  }
+
+  html,body{
+    margin:0 !important;
+    padding:0 !important;
+    width:210mm;
+    height:auto;
+    overflow:visible;
+  }
+
+  @page{
+    size:A4 portrait;
+    margin:0;
+  }
+
+  /* シートごとに改ページ */
+  .print-sheet{
+    page-break-after:always;
+    break-after:page;
+    width:210mm;
+    display:block;
+    margin:0;
+    /* paddingはJS側のインラインスタイルで制御 */
+  }
+  .print-sheet:last-child{
+    page-break-after:avoid;
+    break-after:avoid;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>31297 ラベルメーカー</h1>
+  <span class="ver">V5.4</span>
+</div>
+
+<div class="layout">
+
+<!-- ===== 左サイドバー：キット管理 ===== -->
+<div class="sidebar">
+  <h2>キット管理</h2>
+
+  <label class="field-label">登録キット一覧</label>
+  <select class="kit-list" id="kitList" size="8"></select>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost btn-sm" onclick="editKit()">編集</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteKit()">削除</button>
+  </div>
+
+  <label class="field-label">キット名</label>
+  <input type="text" id="kitName" placeholder="キット名">
+
+  <label class="field-label">材料（1行に1つ）</label>
+  <textarea id="kitParts" rows="6" placeholder="アステリア&#10;ノエル&#10;特小B"></textarea>
+
+  <button class="btn btn-primary btn-block" onclick="saveKit()" style="margin-top:8px">保存</button>
+
+  <div class="section-gap"></div>
+
+  <h2>改行用語辞書</h2>
+  <div style="font-size:11px;color:#888;margin-bottom:6px">
+    長い商品名が2段になるとき、ここに登録した単語の境界を優先して改行します。
+  </div>
+
+  <select class="kit-list" id="vocabList" size="6" style="height:100px"></select>
+
+  <div class="btn-row">
+    <button class="btn btn-danger btn-sm" onclick="deleteVocabWord()">削除</button>
+  </div>
+
+  <label class="field-label">単語を追加</label>
+  <div style="display:flex;gap:4px">
+    <input type="text" id="vocabInput" placeholder="例：チェコハート" style="flex:1">
+    <button class="btn btn-primary btn-sm" onclick="addVocabWord()">追加</button>
+  </div>
+</div>
+
+<!-- ===== メインエリア ===== -->
+<div class="main">
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:16px">
+
+    <!-- 左カラム：印刷設定 -->
+    <div>
+      <!-- 履歴 -->
+      <div class="section-header">履歴</div>
+      <div id="historyArea"></div>
+
+      <div class="section-gap"></div>
+
+      <!-- キット選択 -->
+      <div class="section-header">キット選択</div>
+      <div id="kitOrders"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addKitOrder()">＋ キット追加</button>
+
+      <div class="section-gap"></div>
+
+      <!-- 追加ラベル -->
+      <div class="section-header">追加ラベル</div>
+      <div id="extraOrders"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addExtraOrder()">＋ ラベル追加</button>
+
+      <div class="section-gap"></div>
+
+      <!-- 開始位置 -->
+      <div class="section-header">開始位置</div>
+      <div class="pos-row">
+        <div>
+          <label class="field-label">段（行）1〜25</label>
+          <input type="number" id="row" value="1" min="1" max="25">
+        </div>
+        <div>
+          <label class="field-label">列 1〜8</label>
+          <input type="number" id="col" value="1" min="1" max="8">
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-block" onclick="useLastPosition()" style="margin-top:6px">
+        ⏩ 前回の続きから開始 <span id="lastPosInfo" style="font-size:11px;color:#999"></span>
+      </button>
+
+      <div class="section-gap"></div>
+
+      <!-- プレビュー作成 -->
+      <button class="btn btn-primary btn-block" style="padding:10px;font-size:15px" onclick="buildFromV5()">
+        🔍 プレビュー作成
+      </button>
+
+      <!-- サマリー -->
+      <div style="margin-top:12px" id="summaryWrap" style="display:none">
+        <div class="section-header">印刷前サマリー</div>
+        <div id="v5summary" class="summary-box">プレビュー作成後に表示されます</div>
+      </div>
+
+      <!-- 印刷 -->
+      <div class="print-area" style="margin-top:12px">
+        <button class="btn btn-success btn-block" style="padding:10px;font-size:15px" onclick="confirmPrint()">
+          🖨 印刷
+        </button>
+        <div class="print-note" id="printNote"></div>
+        <div style="font-size:11px;color:#888;margin-top:6px;line-height:1.5">
+          ⚠ Chromeの印刷ダイアログで「余白：なし」「倍率：100%」に設定してください
+        </div>
+      </div>
+
+      <!-- 印刷レイアウト調整 -->
+      <details class="print-config" style="margin-top:8px">
+        <summary>⚙ 印刷レイアウト調整（mm単位）</summary>
+        <div class="print-config-grid">
+          <div>
+            <label>上余白 (mm)</label>
+            <input type="number" id="cfgMarginTop" value="12.5" step="0.1">
+          </div>
+          <div>
+            <label>左余白 (mm)</label>
+            <input type="number" id="cfgMarginLeft" value="14.5" step="0.1">
+          </div>
+          <div>
+            <label>ラベル高さ (mm)</label>
+            <input type="number" id="cfgLabelH" value="8.0" step="0.1">
+          </div>
+          <div>
+            <label>ラベル幅 (mm)</label>
+            <input type="number" id="cfgLabelW" value="20.0" step="0.1">
+          </div>
+          <div>
+            <label>行間隔 (mm)</label>
+            <input type="number" id="cfgRowGap" value="3.0" step="0.1">
+          </div>
+          <div>
+            <label>列間隔 (mm)</label>
+            <input type="number" id="cfgColGap" value="3.0" step="0.1">
+          </div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:4px">
+          ※ A-ONE 31297初期値。ズレる場合は0.1mm単位で調整してください。
+        </div>
+        <button class="print-config-reset" onclick="resetPrintConfig()">初期値に戻す</button>
+      </details>
+
+      <!-- エラー -->
+      <div style="margin-top:12px" id="errWrap" style="display:none">
+        <div class="section-header">エラー</div>
+        <div id="errors" class="err-box" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- 右カラム：プレビュー -->
+    <div>
+      <div class="section-header">シート別プレビュー</div>
+
+      <div class="zoom-bar">
+        <span>表示倍率:</span>
+        <select id="zoomSelect" onchange="applyZoom()">
+          <option value="100">100%</option>
+          <option value="75">75%</option>
+          <option value="50">50%</option>
+        </select>
+      </div>
+
+      <div id="sheetTabs" class="sheet-tabs"></div>
+      <div style="font-size:11px;color:#888;margin-bottom:6px;display:flex;gap:12px;flex-wrap:wrap">
+        <span><span style="display:inline-block;width:10px;height:10px;background:#e8f5e9;border:1px solid #81c784;border-radius:2px;vertical-align:middle"></span> 印刷あり</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#fafafa;border:1px solid #ddd;border-radius:2px;vertical-align:middle"></span> 空白</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#fce4ec;border:1px solid #e94560;border-radius:2px;vertical-align:middle"></span> 開始位置</span>
+        <span style="color:#b71c1c">赤文字=縮小あり</span>
+        <span style="color:#e65100">オレンジ枠=要確認</span>
+      </div>
+
+      <div id="previewWrap" class="preview-wrap">
+        <div id="previewInner">
+          <div style="color:#999;font-size:13px;padding:20px">プレビュー作成後にここに表示されます</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- 印刷専用レイアウト（画面では非表示、印刷時のみ表示） -->
+<div id="printLayout"></div>
+
+<!-- 非表示：V3互換用 -->
+<div style="display:none">
+  <textarea id="orders"></textarea>
+  <textarea id="extra"></textarea>
+</div>
+
+<script>
+// =========================================
+// データベース
+// =========================================
+let db;
+try{
+  db = JSON.parse(localStorage.getItem("kits31297_v3") || "{}");
+}catch(e){
+  console.error('キットデータの読み込みに失敗したため初期化します', e);
+  db = {};
+}
+
+// V2データ移行
+if(Object.keys(db).length === 0){
+  const v2 = localStorage.getItem("kits31297_v2");
+  if(v2){ try{ db = JSON.parse(v2); localStorage.setItem("kits31297_v3", JSON.stringify(db)); }catch(e){} }
+}
+
+// =========================================
+// キット管理
+// =========================================
+function refreshKitList(){
+  const s = document.getElementById("kitList");
+  s.innerHTML = "";
+  Object.keys(db).sort().forEach(k => {
+    const o = document.createElement("option");
+    o.value = k;
+    o.textContent = k + " (" + db[k].length + "材料)";
+    s.appendChild(o);
+  });
+  // datalistも更新
+  document.querySelectorAll('.kit-datalist').forEach(dl => {
+    dl.innerHTML = '';
+    buildKitOptions(dl);
+  });
+}
+
+function saveKit(){
+  const name = document.getElementById("kitName").value.trim();
+  const parts = document.getElementById("kitParts").value.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+  if(!name){ alert("キット名を入力してください"); return; }
+  // 記号・空白のみの名前は拒否（最低1文字の文字・数字を含むこと）
+  if(!/[^\s　!-/:-@[-`{-~！-／：-＠［-｀｛-～]/.test(name)){
+    alert("キット名に文字を含めてください（記号のみは不可）");
+    return;
+  }
+  if(!parts.length){ alert("材料を入力してください"); return; }
+  db[name] = parts;
+  localStorage.setItem("kits31297_v3", JSON.stringify(db));
+  refreshKitList();
+  alert("保存しました：" + name);
+}
+
+function editKit(){
+  const sel = document.getElementById("kitList");
+  const name = sel.value;
+  if(!name){ alert("キットを選択してください"); return; }
+  document.getElementById("kitName").value = name;
+  document.getElementById("kitParts").value = db[name].join("\n");
+}
+
+function deleteKit(){
+  const sel = document.getElementById("kitList");
+  const name = sel.value;
+  if(!name){ alert("キットを選択してください"); return; }
+  if(!confirm(name + " を削除しますか？")) return;
+  delete db[name];
+  localStorage.setItem("kits31297_v3", JSON.stringify(db));
+  refreshKitList();
+}
+
+// =========================================
+// 最近使ったキット
+// =========================================
+function getRecent(){ return JSON.parse(localStorage.getItem('recentKits31297') || '[]'); }
+function saveRecent(k){ let r = getRecent().filter(v=>v!==k); r.unshift(k); r=r.slice(0,5); localStorage.setItem('recentKits31297', JSON.stringify(r)); }
+
+function buildKitOptions(dl){
+  const recent = getRecent();
+  recent.forEach(k => { if(db[k]){ let o=document.createElement('option'); o.value=k; dl.appendChild(o); } });
+  Object.keys(db).sort((a,b)=>a.localeCompare(b,'ja')).forEach(k => {
+    if(!recent.includes(k)){ let o=document.createElement('option'); o.value=k; dl.appendChild(o); }
+  });
+}
+
+// =========================================
+// キット行・追加ラベル行 追加
+// =========================================
+function addKitOrder(){
+  const w = document.getElementById("kitOrders");
+  const r = document.createElement('div');
+  r.className = 'v5row';
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = 'キット名';
+  const id = 'dl' + Math.random().toString(36).slice(2);
+  inp.setAttribute('list', id);
+  const dl = document.createElement('datalist');
+  dl.id = id;
+  dl.className = 'kit-datalist';
+  buildKitOptions(dl);
+  const qty = document.createElement('input');
+  qty.type = 'number';
+  qty.value = '1';
+  qty.min = '1';
+  const del = document.createElement('button');
+  del.className = 'btn btn-danger btn-sm';
+  del.textContent = '🗑';
+  del.onclick = () => r.remove();
+  r.append(inp, qty, del);
+  w.append(r, dl);
+}
+
+function addExtraOrder(){
+  const w = document.getElementById("extraOrders");
+  const r = document.createElement('div');
+  r.className = 'v5row';
+  const n = document.createElement('input');
+  n.type = 'text';
+  n.placeholder = 'ラベル名';
+  const q = document.createElement('input');
+  q.type = 'number';
+  q.value = '1';
+  q.min = '1';
+  const d = document.createElement('button');
+  d.className = 'btn btn-danger btn-sm';
+  d.textContent = '🗑';
+  d.onclick = () => r.remove();
+  r.append(n, q, d);
+  w.appendChild(r);
+}
+
+// =========================================
+// 開始位置：前回の続き
+// =========================================
+function useLastPosition(){
+  const p = JSON.parse(localStorage.getItem('lastPosition31297') || 'null');
+  if(p){
+    document.getElementById("row").value = p.row;
+    document.getElementById("col").value = p.col;
+  } else {
+    alert('前回の続き情報がありません');
+  }
+}
+
+function updateLastPosInfo(){
+  const p = JSON.parse(localStorage.getItem('lastPosition31297') || 'null');
+  document.getElementById("lastPosInfo").textContent = p ? '(' + p.row + '段 ' + p.col + '列)' : '';
+}
+
+// =========================================
+// パース
+// =========================================
+function parseLine(line){
+  line = line.replace(/　/g," ").replace(/[×xX＊*]/g," ");
+  return line.match(/^(.*?)\s+(\d+)$/);
+}
+
+// =========================================
+// シート別データ生成
+// =========================================
+function generateSheetData(labels, startRow, startCol){
+  const startIdx = (startRow - 1) * 8 + (startCol - 1); // 0-indexed
+  const sheets = [];
+  let remaining = [...labels];
+  let currentOffset = startIdx; // first sheet offset
+
+  while(remaining.length > 0){
+    const sheetCells = new Array(200).fill(''); // 25行×8列
+    const capacity = 200 - currentOffset;
+    const count = Math.min(remaining.length, capacity);
+    for(let i = 0; i < count; i++){
+      sheetCells[currentOffset + i] = remaining[i];
+    }
+    const labelCount = count;
+    sheets.push({ cells: sheetCells, count: labelCount, startIdx: currentOffset });
+    remaining = remaining.slice(count);
+    currentOffset = 0; // シート2以降は先頭から
+  }
+
+  // ラベルが0でも最低1シート
+  if(sheets.length === 0){
+    sheets.push({ cells: new Array(200).fill(''), count: 0, startIdx: startIdx });
+  }
+
+  return sheets;
+}
+
+// =========================================
+// ズーム
+// =========================================
+function applyZoom(){
+  const z = parseInt(document.getElementById("zoomSelect").value) / 100;
+  const grid = document.querySelector('.preview-grid');
+  if(grid){
+    grid.style.transform = 'scale(' + z + ')';
+    grid.style.transformOrigin = 'top left';
+    // ラッパー高さ調整
+    const h = grid.scrollHeight;
+    document.getElementById('previewInner').style.height = (h * z + 20) + 'px';
+  }
+}
+
+// =========================================
+// プレビュー描画
+// =========================================
+let currentSheets = [];
+let currentSheetIdx = 0;
+let currentStartIdx = 0;
+
+function renderSheetTabs(){
+  const tabsEl = document.getElementById("sheetTabs");
+  tabsEl.innerHTML = '';
+  currentSheets.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'sheet-tab' + (i === currentSheetIdx ? ' active' : '');
+    btn.textContent = 'シート' + (i+1) + ' (' + s.count + ')';
+    btn.onclick = () => { currentSheetIdx = i; renderSheetTabs(); renderPreviewWithFontInfo(); };
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderPreview(){
+  const inner = document.getElementById('previewInner');
+  const sheet = currentSheets[currentSheetIdx];
+  if(!sheet){ inner.innerHTML = '<div style="color:#999;padding:20px">データなし</div>'; return; }
+
+  // 行番号＋グリッド
+  const wrap = document.createElement('div');
+  wrap.className = 'preview-with-ruler';
+
+  // 行番号
+  const ruler = document.createElement('div');
+  ruler.className = 'row-ruler';
+  for(let row = 1; row <= 25; row++){
+    const rn = document.createElement('div');
+    rn.className = 'row-num';
+    rn.textContent = row;
+    ruler.appendChild(rn);
+  }
+
+  // グリッド
+  const grid = document.createElement('div');
+  grid.className = 'preview-grid';
+
+  sheet.cells.forEach((text, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    const isStart = (currentSheetIdx === 0 && idx === currentStartIdx);
+    if(isStart && !text){ cell.classList.add('start-mark'); cell.textContent = '▲'; }
+    else if(text){ cell.classList.add('filled'); cell.textContent = text; }
+    else{ cell.classList.add('empty'); }
+    grid.appendChild(cell);
+  });
+
+  wrap.appendChild(ruler);
+  wrap.appendChild(grid);
+  inner.innerHTML = '';
+  inner.appendChild(wrap);
+
+  // ズーム適用
+  const z = parseInt(document.getElementById("zoomSelect").value) / 100;
+  if(z !== 1){
+    grid.style.transform = 'scale(' + z + ')';
+    grid.style.transformOrigin = 'top left';
+  }
+}
+
+// =========================================
+// 入力値の範囲補正
+// =========================================
+function clampInt(value, min, max, fallback){
+  if(isNaN(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
+
+// =========================================
+// プレビュー作成（メイン）
+// =========================================
+function buildFromV5(){
+  const errs = [];
+  const labels = [];
+  const kits = [];
+  const extras = [];
+
+  // キット
+  document.querySelectorAll('#kitOrders .v5row').forEach(r => {
+    const n = r.children[0].value.trim();
+    const c = parseInt(r.children[1].value) || 0;
+    if(!n || c <= 0) return;
+    if(!db[n]){ errs.push('未登録キット: ' + n); return; }
+    kits.push({ name: n, qty: c });
+    saveRecent(n);
+    db[n].forEach(part => { for(let i=0; i<c; i++) labels.push(part); });
+  });
+
+  // 追加ラベル
+  document.querySelectorAll('#extraOrders .v5row').forEach(r => {
+    const n = r.children[0].value.trim();
+    const c = parseInt(r.children[1].value) || 0;
+    if(!n || c <= 0) return;
+    // 記号・空白のみのラベル名は無効として弾く
+    if(!/[^\s　!-/:-@[-`{-~！-／：-＠［-｀｛-～]/.test(n)){
+      errs.push('追加ラベル名が無効です（記号のみ不可）: ' + n);
+      return;
+    }
+    extras.push({ name: n, qty: c });
+    for(let i=0; i<c; i++) labels.push(n);
+  });
+
+  if(!kits.length && !extras.length){ alert('キットまたは追加ラベルを入力してください'); return; }
+
+  if(errs.length){
+    const errEl = document.getElementById("errors");
+    errEl.textContent = errs.join('\n');
+    errEl.style.display = 'block';
+    return;
+  }
+  document.getElementById("errors").style.display = 'none';
+
+  const startRow = clampInt(parseInt(document.getElementById("row").value), 1, 25, 1);
+  const startCol = clampInt(parseInt(document.getElementById("col").value), 1, 8, 1);
+  document.getElementById("row").value = startRow; // 補正後の値を画面にも反映
+  document.getElementById("col").value = startCol;
+  currentStartIdx = (startRow - 1) * 8 + (startCol - 1);
+
+  // シート別データ生成
+  currentSheets = generateSheetData(labels, startRow, startCol);
+  currentSheetIdx = 0;
+
+  // サマリー生成
+  const total = labels.length;
+  const sheets = currentSheets.length;
+  let summaryLines = [];
+  summaryLines.push('使用枚数: ' + total + '枚');
+  summaryLines.push('シート数: ' + sheets);
+  currentSheets.forEach((s, i) => {
+    summaryLines.push('  シート' + (i+1) + ': ' + s.count + '枚');
+  });
+  summaryLines.push('開始位置: ' + startRow + '段 ' + startCol + '列');
+  summaryLines.push('');
+  summaryLines.push('【キット】');
+  if(kits.length) kits.forEach(k => summaryLines.push('  ' + k.name + ' × ' + k.qty));
+  else summaryLines.push('  なし');
+  summaryLines.push('');
+  summaryLines.push('【追加ラベル】');
+  if(extras.length) extras.forEach(x => summaryLines.push('  ' + x.name + ' × ' + x.qty));
+  else summaryLines.push('  なし');
+
+  const summaryEl = document.getElementById("v5summary");
+  summaryEl.textContent = summaryLines.join('\n');
+
+  // 次の開始位置計算（印刷時のみ保存）
+  // 最終シートで何番目まで使ったか
+  const lastSheet = currentSheets[currentSheets.length - 1];
+  // 最終シートの最後に使われたインデックス（0-indexed in that sheet）
+  let lastUsedIdx = -1;
+  for(let i = 199; i >= 0; i--){ if(lastSheet.cells[i] !== ''){ lastUsedIdx = i; break; } }
+  let nextRow, nextCol;
+  if(lastUsedIdx === -1 || lastUsedIdx === 199){
+    // シートが満杯 or 空 → 次シート1段1列
+    nextRow = 1; nextCol = 1;
+  } else {
+    const nextIdx = lastUsedIdx + 1;
+    nextRow = Math.floor(nextIdx / 8) + 1;
+    nextCol = (nextIdx % 8) + 1;
+  }
+  window._nextPos = { row: nextRow, col: nextCol };
+  window._printData = { kits, extras, total, startRow, startCol };
+
+  // タブとプレビュー描画
+  renderSheetTabs();
+  renderPreviewWithFontInfo();
+
+  // 印刷ノート更新
+  document.getElementById("printNote").textContent =
+    '印刷後、次の開始位置は ' + nextRow + '段 ' + nextCol + '列 になります';
+}
+
+// =========================================
+// 印刷
+// =========================================
+function confirmPrint(){
+  if(!currentSheets.length || !window._printData){ alert('先にプレビューを作成してください'); return; }
+  const d = window._printData;
+  if(!confirm('印刷しますか？\n\n合計 ' + d.total + '枚\nシート数: ' + currentSheets.length)) return;
+
+  // 履歴保存（印刷時のみ）
+  saveHistory({
+    kits: d.kits,
+    extras: d.extras,
+    row: d.startRow,
+    col: d.startCol,
+    total: d.total,
+    time: new Date().toLocaleString('ja-JP')
+  });
+
+  // 前回の続き更新（印刷時のみ）
+  if(window._nextPos){
+    localStorage.setItem('lastPosition31297', JSON.stringify(window._nextPos));
+    updateLastPosInfo();
+  }
+
+  renderHistory();
+
+  // 印刷専用レイアウトを生成してから印刷
+  buildPrintLayout();
+  window.print();
+}
+
+// =========================================
+// 履歴
+// =========================================
+function saveHistory(data){
+  let h = JSON.parse(localStorage.getItem('v5history31297') || '[]');
+  h.unshift(data);
+  h = h.slice(0, 5); // 最大5件
+  localStorage.setItem('v5history31297', JSON.stringify(h));
+}
+
+function loadHistory(idx){
+  const h = JSON.parse(localStorage.getItem('v5history31297') || '[]');
+  const d = h[idx];
+  if(!d) return;
+
+  // キット行クリア・復元
+  document.getElementById('kitOrders').innerHTML = '';
+  d.kits.forEach(k => {
+    addKitOrder();
+    const rows = document.querySelectorAll('#kitOrders .v5row');
+    const last = rows[rows.length - 1];
+    last.children[0].value = k.name;
+    last.children[1].value = k.qty;
+  });
+
+  // 追加ラベル行クリア・復元
+  document.getElementById('extraOrders').innerHTML = '';
+  d.extras.forEach(e => {
+    addExtraOrder();
+    const rows = document.querySelectorAll('#extraOrders .v5row');
+    const last = rows[rows.length - 1];
+    last.children[0].value = e.name;
+    last.children[1].value = e.qty;
+  });
+
+  // 開始位置復元
+  document.getElementById('row').value = d.row;
+  document.getElementById('col').value = d.col;
+
+  // 自動的にプレビュー再生成
+  buildFromV5();
+
+  // 履歴エリアを閉じる
+  const histList = document.getElementById('histList');
+  if(histList) histList.style.display = 'none';
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderHistory(){
+  const histArea = document.getElementById('historyArea');
+  const h = JSON.parse(localStorage.getItem('v5history31297') || '[]');
+  updateLastPosInfo();
+
+  if(!h.length){
+    histArea.innerHTML = '<div style="color:#999;font-size:12px">履歴なし</div>';
+    return;
+  }
+
+  let html = '<button class="history-toggle" onclick="toggleHistory()">📋 履歴を表示/非表示</button>';
+  html += '<div id="histList" style="display:none;margin-top:8px">';
+
+  h.forEach((v, i) => {
+    const time = escapeHtml(v.time || ('履歴 ' + (i+1)));
+    const kitLines = (v.kits||[]).map(k => escapeHtml(k.name) + ' × ' + escapeHtml(String(k.qty))).join('<br>') || 'なし';
+    const extraLines = (v.extras||[]).map(e => escapeHtml(e.name) + ' × ' + escapeHtml(String(e.qty))).join('<br>') || 'なし';
+    const pos = '開始位置: ' + escapeHtml(String(v.row)) + '段 ' + escapeHtml(String(v.col)) + '列';
+    const totalStr = v.total != null ? '使用枚数: ' + escapeHtml(String(v.total)) + '枚' : '';
+
+    html += `
+      <div class="history-item">
+        <div class="hist-time">${time}</div>
+        <div class="hist-kit">${kitLines}</div>
+        ${(v.extras||[]).length ? `<div style="font-size:12px;color:#888;margin-top:2px">追加ラベル</div><div class="hist-extra">${extraLines}</div>` : ''}
+        <div class="hist-meta">${pos}${totalStr ? '　' + totalStr : ''}</div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="loadHistory(${i})">この内容を使う</button>
+      </div>`;
+  });
+
+  html += '</div>';
+  histArea.innerHTML = html;
+}
+
+function toggleHistory(){
+  const x = document.getElementById('histList');
+  if(x) x.style.display = x.style.display === 'none' ? 'block' : 'none';
+}
+
+// =========================================
+// 印刷設定
+// =========================================
+const PRINT_CONFIG_DEFAULTS = {
+  marginTop:  12.5,
+  marginLeft: 14.5,
+  labelH:     8.0,
+  labelW:     20.0,
+  rowGap:     3.0,
+  colGap:     3.0
+};
+
+function getPrintConfig(){
+  return {
+    marginTop:  parseFloat(document.getElementById('cfgMarginTop').value)  || PRINT_CONFIG_DEFAULTS.marginTop,
+    marginLeft: parseFloat(document.getElementById('cfgMarginLeft').value) || PRINT_CONFIG_DEFAULTS.marginLeft,
+    labelH:     parseFloat(document.getElementById('cfgLabelH').value)     || PRINT_CONFIG_DEFAULTS.labelH,
+    labelW:     parseFloat(document.getElementById('cfgLabelW').value)     || PRINT_CONFIG_DEFAULTS.labelW,
+    rowGap:     parseFloat(document.getElementById('cfgRowGap').value),
+    colGap:     parseFloat(document.getElementById('cfgColGap').value)
+  };
+}
+
+function resetPrintConfig(){
+  document.getElementById('cfgMarginTop').value  = PRINT_CONFIG_DEFAULTS.marginTop;
+  document.getElementById('cfgMarginLeft').value = PRINT_CONFIG_DEFAULTS.marginLeft;
+  document.getElementById('cfgLabelH').value     = PRINT_CONFIG_DEFAULTS.labelH;
+  document.getElementById('cfgLabelW').value     = PRINT_CONFIG_DEFAULTS.labelW;
+  document.getElementById('cfgRowGap').value     = PRINT_CONFIG_DEFAULTS.rowGap;
+  document.getElementById('cfgColGap').value     = PRINT_CONFIG_DEFAULTS.colGap;
+}
+
+// =========================================
+// 自動文字サイズ計算
+// =========================================
+// ラベル1片のサイズ（mm→px変換: 1mm = 3.7795px at 96dpi）
+const MM2PX = 3.7795;
+
+// Canvas 2Dで文字幅を測定して最適フォントサイズを決定
+let _measureCanvas = null;
+function getMeasureCtx(){
+  if(!_measureCanvas){
+    _measureCanvas = document.createElement('canvas');
+  }
+  return _measureCanvas.getContext('2d');
+}
+
+// フォントサイズ（pt→px: 1pt = 1.3333px）
+const PT2PX = 1.3333;
+const FONT_SIZES_PT = [10, 9.5, 9, 8.5];
+const FONT_FAMILY = "'Hiragino Kaku Gothic ProN','Meiryo','Yu Gothic',sans-serif";
+
+/**
+ * テキストに最適なフォントサイズと行分割を決定する
+ * @param {string} text
+ * @param {number} cellWmm  ラベル幅(mm)
+ * @param {number} cellHmm  ラベル高さ(mm)
+ * @returns {{ fontSize: number, lines: string[], tooLong: boolean }}
+ */
+// 特殊文字（丸数字・記号・囲み文字等）を含む場合にCanvas測定値を補正
+// U+2460-U+24FF: ①②...㊿ 等の囲み英数字
+// U+3200-U+32FF: ㈠㈡...㉿ 等の囲みCJK
+// U+FF01-U+FF60: 全角英数記号
+function measureWidth(ctx, text){
+  const raw = ctx.measureText(text).width;
+  // 上記範囲の文字を含む場合は1.15倍で補正（Canvas誤計測対策）
+  const hasSpecial = /[①-⓿㈀-㋿！-｠]/.test(text);
+  return hasSpecial ? raw * 1.15 : raw;
+}
+
+// =========================================
+// 商品名語彙辞書（画面から追加・削除可能、localStorageに保存）
+// =========================================
+// 初期辞書（初回起動時のみ使用。以降はlocalStorageの内容が優先される）
+const LABEL_VOCAB_DEFAULTS = [
+  "特小","丸小","丸大","竹ビーズ","チェコ","チリ","座金付き","ビジュー",
+  "シャーロット","スパンコール","ジェムデュオ","ファルファーレ",
+  "六角大","六角小","チェコハート","枠付","メロン","ましゅまろ",
+  "FP","ＦＰ","星","座金","付き","チリビーズ",
+];
+
+function getLabelVocab(){
+  const saved = localStorage.getItem('labelVocab31297');
+  if(saved){
+    try{ return JSON.parse(saved); }catch(e){}
+  }
+  // 初回はデフォルトを保存してから返す
+  localStorage.setItem('labelVocab31297', JSON.stringify(LABEL_VOCAB_DEFAULTS));
+  return [...LABEL_VOCAB_DEFAULTS];
+}
+
+function setLabelVocab(arr){
+  localStorage.setItem('labelVocab31297', JSON.stringify(arr));
+}
+
+function renderVocabList(){
+  const sel = document.getElementById('vocabList');
+  if(!sel) return;
+  const vocab = getLabelVocab();
+  sel.innerHTML = '';
+  vocab.forEach(w => {
+    const o = document.createElement('option');
+    o.value = w;
+    o.textContent = w;
+    sel.appendChild(o);
+  });
+}
+
+function addVocabWord(){
+  const input = document.getElementById('vocabInput');
+  const word = input.value.trim();
+  if(!word){ alert('単語を入力してください'); return; }
+  const vocab = getLabelVocab();
+  if(vocab.includes(word)){ alert('すでに登録されています'); return; }
+  vocab.push(word);
+  setLabelVocab(vocab);
+  renderVocabList();
+  input.value = '';
+}
+
+function deleteVocabWord(){
+  const sel = document.getElementById('vocabList');
+  const word = sel.value;
+  if(!word){ alert('単語を選択してください'); return; }
+  if(!confirm('「' + word + '」を辞書から削除しますか？')) return;
+  let vocab = getLabelVocab();
+  vocab = vocab.filter(w => w !== word);
+  setLabelVocab(vocab);
+  renderVocabList();
+}
+
+// 辞書の単語境界で分割してよい位置（index）の集合を返す
+// 「単語の直後」を分割点候補とする
+function getVocabSplitPoints(text){
+  const points = new Set();
+  // 全角スペース／半角スペースは常に最優先の分割点
+  for(let i = 0; i < text.length; i++){
+    if(text[i] === '　' || text[i] === ' '){
+      points.add(i); // スペースの位置で切り、スペース自体は1行目に残す→後段で調整
+    }
+  }
+  // 辞書単語：長い単語から先にマッチさせる（「チェコハート」が「チェコ」に埋もれないように）
+  const sorted = getLabelVocab().sort((a,b) => b.length - a.length);
+  for(const word of sorted){
+    if(!word) continue;
+    let idx = text.indexOf(word);
+    while(idx !== -1){
+      const endIdx = idx + word.length;
+      if(endIdx < text.length) points.add(endIdx); // 単語の直後
+      if(idx > 0) points.add(idx); // 単語の直前
+      idx = text.indexOf(word, idx + 1);
+    }
+  }
+  return points;
+}
+
+function calcLabelLayout(text, cellWmm, cellHmm){
+  if(!text) return { fontSize: 10, lines: [''], tooLong: false };
+
+  const ctx = getMeasureCtx();
+  // 左右内側余白0.5mm分を除いた有効幅
+  const availW = (cellWmm - 1) * MM2PX;
+
+  for(const pt of FONT_SIZES_PT){
+    const px = pt * PT2PX;
+    ctx.font = `${px}px ${FONT_FAMILY}`;
+    const w = measureWidth(ctx, text);
+    if(w <= availW){
+      return { fontSize: pt, lines: [text], tooLong: false };
+    }
+  }
+
+  // 8.5ptでも収まらない → 2行化
+  const pt = 8.5;
+  const px = pt * PT2PX;
+  ctx.font = `${px}px ${FONT_FAMILY}`;
+
+  // ---- 丸数字・囲み文字は「前の文字に結合」して分割対象から除外 ----
+  // U+2460-U+24FF(①-⑨等), U+3200-U+32FF(㈠等), U+2776-U+2793(❶等)
+  const ATTACH_TO_PREV = /[\u2460-\u24FF\u3200-\u32FF\u2776-\u2793]/;
+
+  // 「この index の直前で切ってよいか」を判定する関数
+  // index = line1 の文字数（= text.slice(0,index) / text.slice(index)）
+  function isAllowedSplit(idx){
+    // 分割後の2行目の先頭が丸数字なら、その直前では切らない
+    // （丸数字は前の文字にくっつくべきなので、ここでは切らない）
+    if(ATTACH_TO_PREV.test(text[idx])) return false;
+    return true;
+  }
+
+  // 意味的に自然な区切り候補（優先順）。各要素はマッチ位置=分割点となる正規表現
+  // ※カタカナ中間は「均等に近い位置」を別途優先するため、ここには含めない
+  const naturalBreaks = [
+    /(?<=付き)(?=[^\s])/,        // 座金付き／ビジュー
+    /(?<=付)(?=[^きの\d])/,
+    /(?<=入り)(?=[^\s])/,
+    /(?<=入)(?=[^りの])/,
+    /(?<=なし)(?=[^\s])/,
+    /(?<=あり)(?=[^\s])/,
+    /(?<=用)(?=[^\s])/,
+    /(?<=[ァ-ヶー])(?=[A-Za-z0-9#＃])/,  // カタカナ→英数記号
+    /(?<=[A-Za-z0-9])(?=[ァ-ヶー])/,      // 英数字→カタカナ
+  ];
+  // カタカナ連続のみの語に使うフォールバック用パターン（均等優先で選ぶ）
+  const katakanaMidBreak = /(?<=[ァ-ヶー])(?=[ァ-ヶー])/;
+
+  // 有効な分割点を全列挙（幅に収まり、かつ丸数字の直前ではない）
+  const validSplits = [];
+  for(let i = 1; i < text.length; i++){
+    if(!isAllowedSplit(i)) continue;
+    const w1 = measureWidth(ctx, text.slice(0, i));
+    const w2 = measureWidth(ctx, text.slice(i));
+    if(w1 <= availW && w2 <= availW) validSplits.push(i);
+  }
+
+  let bestSplit = null;
+
+  if(validSplits.length > 0){
+    const validSet = new Set(validSplits);
+
+    // ① 最優先：語彙辞書・スペースによる単語境界
+    const vocabPoints = getVocabSplitPoints(text);
+    const vocabValid = [...vocabPoints].filter(idx => validSet.has(idx));
+    if(vocabValid.length > 0){
+      const mid = text.length / 2;
+      bestSplit = vocabValid.reduce((a, b) =>
+        Math.abs(a - mid) <= Math.abs(b - mid) ? a : b
+      );
+    }
+
+    // ② 次点：意味の区切りサフィックス・記号境界
+    if(bestSplit === null){
+      outer:
+      for(const re of naturalBreaks){
+        const matches = [...text.matchAll(new RegExp(re, 'g'))];
+        for(const m of matches){
+          if(validSet.has(m.index)){
+            bestSplit = m.index;
+            break outer;
+          }
+        }
+      }
+    }
+
+    // ③ カタカナ中間候補の中から、均等に最も近い点を選ぶ
+    if(bestSplit === null){
+      const kmatches = [...text.matchAll(new RegExp(katakanaMidBreak, 'g'))]
+        .map(m => m.index)
+        .filter(idx => validSet.has(idx));
+      if(kmatches.length > 0){
+        const mid = text.length / 2;
+        bestSplit = kmatches.reduce((a, b) =>
+          Math.abs(a - mid) <= Math.abs(b - mid) ? a : b
+        );
+      }
+    }
+
+    // ④ それでも見つからなければ均等に最も近い有効点
+    if(bestSplit === null){
+      const mid = text.length / 2;
+      bestSplit = validSplits.reduce((a, b) =>
+        Math.abs(a - mid) <= Math.abs(b - mid) ? a : b
+      );
+    }
+  } else {
+    // どこで切っても片方がはみ出す場合：丸数字直前を避けつつ中央に最も近い点
+    let idx = Math.ceil(text.length / 2);
+    while(idx < text.length && !isAllowedSplit(idx)) idx++;
+    if(idx >= text.length){
+      idx = Math.ceil(text.length / 2);
+      while(idx > 1 && !isAllowedSplit(idx)) idx--;
+    }
+    bestSplit = idx;
+  }
+
+  let line1 = text.slice(0, bestSplit);
+  let line2 = text.slice(bestSplit);
+  // スペースで割れた場合、スペース自体は表示上不要なので削る
+  line1 = line1.replace(/[\s　]+$/, '');
+  line2 = line2.replace(/^[\s　]+/, '');
+
+  const w1 = measureWidth(ctx, line1);
+  const w2 = measureWidth(ctx, line2);
+  const tooLong = (w1 > availW || w2 > availW);
+
+  return { fontSize: pt, lines: [line1, line2], tooLong };
+}
+
+// =========================================
+// 印刷専用レイアウト生成
+// =========================================
+function buildPrintLayout(){
+  const cfg = getPrintConfig();
+  const container = document.getElementById('printLayout');
+  container.innerHTML = '';
+
+  // 1シートの総高さ = marginTop + 25行×labelH + 24個のrowGap
+  // これが297mm以内に収まるかチェック
+  const sheetH = cfg.marginTop + 25 * cfg.labelH + 24 * cfg.rowGap;
+  // 超える場合は rowGap を自動縮小
+  let rowGap = cfg.rowGap;
+  if(sheetH > 297){
+    rowGap = (297 - cfg.marginTop - 25 * cfg.labelH) / 24;
+    rowGap = Math.max(0, parseFloat(rowGap.toFixed(3)));
+  }
+
+  currentSheets.forEach((sheet) => {
+    const sheetDiv = document.createElement('div');
+    sheetDiv.className = 'print-sheet';
+    // paddingで上・左余白を確保（marginだとページ境界で崩れる）
+    sheetDiv.style.paddingTop = cfg.marginTop + 'mm';
+    sheetDiv.style.paddingLeft = cfg.marginLeft + 'mm';
+    sheetDiv.style.boxSizing = 'border-box';
+    sheetDiv.style.width = '210mm';
+
+    const grid = document.createElement('div');
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(8,' + cfg.labelW + 'mm)';
+    // rowGapはgridで制御。高さはセル自体のheightで決まる
+    grid.style.columnGap = cfg.colGap + 'mm';
+    grid.style.rowGap = rowGap + 'mm';
+    grid.style.width = 'fit-content';
+
+    sheet.cells.forEach((text) => {
+      const labelDiv = document.createElement('div');
+      labelDiv.style.width = cfg.labelW + 'mm';
+      labelDiv.style.height = cfg.labelH + 'mm';
+      labelDiv.style.display = 'flex';
+      labelDiv.style.flexDirection = 'column';
+      labelDiv.style.alignItems = 'center';
+      labelDiv.style.justifyContent = 'center';
+      labelDiv.style.overflow = 'hidden';
+      labelDiv.style.lineHeight = '1.15';
+      labelDiv.style.textAlign = 'center';
+      labelDiv.style.boxSizing = 'border-box';
+      labelDiv.style.padding = '0 0.5mm 0 0.8mm'; // 左0.8mm=基準0.5mm+オフセット0.3mm
+
+      if(text){
+        const layout = calcLabelLayout(text, cfg.labelW, cfg.labelH);
+        const pxSize = layout.fontSize * PT2PX;
+        labelDiv.style.fontSize = pxSize + 'px';
+        labelDiv.style.fontFamily = FONT_FAMILY;
+        layout.lines.forEach(line => {
+          const span = document.createElement('div');
+          span.textContent = line;
+          span.style.whiteSpace = 'nowrap';
+          labelDiv.appendChild(span);
+        });
+      }
+
+      grid.appendChild(labelDiv);
+    });
+
+    sheetDiv.appendChild(grid);
+    container.appendChild(sheetDiv);
+  });
+}
+
+// =========================================
+// プレビューの文字サイズ表示を更新
+// =========================================
+function renderPreviewWithFontInfo(){
+  renderPreview();
+
+  // プレビューセルに計算済みフォントサイズを反映
+  const cfg = getPrintConfig();
+  const sheet = currentSheets[currentSheetIdx];
+  if(!sheet) return;
+
+  const cells = document.querySelectorAll('#previewInner .cell.filled');
+  let cellIdx = 0;
+  sheet.cells.forEach((text, idx) => {
+    if(!text) return;
+    const cell = cells[cellIdx++];
+    if(!cell) return;
+
+    // 印刷時と同じ基準（mm単位）で計算 → プレビューと印刷で一致させる
+    const layout = calcLabelLayout(text, cfg.labelW, cfg.labelH);
+
+    // プレビューセルに反映
+    cell.innerHTML = '';
+    cell.style.display = 'flex';
+    cell.style.alignItems = 'center';
+    cell.style.justifyContent = 'center';
+    cell.style.flexDirection = 'column';
+
+    if(layout.lines.length > 1){
+      layout.lines.forEach(line => {
+        const d = document.createElement('div');
+        d.textContent = line;
+        d.style.lineHeight = '1.2';
+        d.style.fontSize = '9px';
+        cell.appendChild(d);
+      });
+    } else {
+      const d = document.createElement('div');
+      d.textContent = text;
+      cell.appendChild(d);
+    }
+
+    if(layout.fontSize < 10){
+      cell.style.color = '#b71c1c';
+      cell.title = layout.fontSize + 'pt' + (layout.lines.length > 1 ? ' (2行)' : '');
+    }
+    if(layout.tooLong){
+      cell.style.background = '#fff3e0';
+      cell.style.borderColor = '#ff9800';
+    }
+  });
+}
+
+// =========================================
+// 初期化
+// =========================================
+refreshKitList();
+addKitOrder();
+addExtraOrder();
+renderHistory();
+updateLastPosInfo();
+renderVocabList();
+</script>
+</body>
+</html>
